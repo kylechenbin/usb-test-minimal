@@ -26,6 +26,7 @@
 
           services.xserver = {
             enable = true;
+            videoDrivers = [ "vesa" ];
             windowManager.dwm.enable = true;
             displayManager.startx.enable = true;
           };
