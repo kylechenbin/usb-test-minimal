@@ -20,7 +20,7 @@
           services.getty.autologinUser = "root";
           users.users.root.initialPassword = "root";
 
-          system.stateVersion = "24.05";
+          system.stateVersion = "25.05";
 
           # X + dwm
           services.xserver.enable = true;
@@ -34,7 +34,6 @@
             fi
           '';
 
-          # 加这一行 ↓↓↓
           nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
           environment.systemPackages = [
