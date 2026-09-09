@@ -9,7 +9,6 @@
       system = "x86_64-linux";
       modules = [
         ({ pkgs, lib, ... }: {
-          # 沿用 live 环境本身的关键设置，避免 rebuild 后网络/引导炸掉
           networking.hostName = "usb-test-target";
           networking.useDHCP = lib.mkForce true;
 
@@ -21,7 +20,24 @@
 
           system.stateVersion = "24.05";
 
-          environment.systemPackages = [ pkgs.htop pkgs.btop ];
+          # X + dwm
+          services.xserver.enable = true;
+          services.xserver.windowManager.dwm.enable = true;
+
+          # 自动起图形界面:autologin 到 tty 后跑 startx
+          services.xserver.displayManager.startx.enable = true;
+          programs.bash.loginShellInit = ''
+            if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
+              startx
+            fi
+          '';
+
+          environment.systemPackages = [
+            pkgs.htop
+            pkgs.btop
+            pkgs.dmenu   # dwm 标配的启动器,没有它 dwm 里几乎啥也点不开
+            pkgs.st      # suckless 的终端,dwm 默认按 Mod+Shift+Return 开的就是它
+          ];
         })
       ];
     };
