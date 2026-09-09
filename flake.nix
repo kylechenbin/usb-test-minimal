@@ -3,8 +3,6 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
-
   outputs = { self, nixpkgs, ... }:
   {
     nixosConfigurations.usb-test = nixpkgs.lib.nixosSystem {
@@ -16,18 +14,28 @@
 
           boot.loader.grub.enable = false;
           fileSystems."/" = { device = "none"; fsType = "tmpfs"; };
+          boot.kernelParams = [ "console=ttyS0,115200n8" "console=tty1" ];
 
           services.getty.autologinUser = "root";
           users.users.root.initialPassword = "root";
 
           system.stateVersion = "25.05";
 
-          # X + dwm
-          services.xserver.enable = true;
-          services.xserver.windowManager.dwm.enable = true;
+          # ↓ 从顶层挪到这里
+          nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-          # 自动起图形界面:autologin 到 tty 后跑 startx
-          services.xserver.displayManager.startx.enable = true;
+          # 关掉硬件加速,避免拉 mesa+llvm 撑爆 tmpfs
+          hardware.graphics.enable = lib.mkForce false;
+
+          services.xserver = {
+            enable = true;
+            videoDrivers = [ "vesa" ];
+            windowManager.dwm.enable = true;
+            displayManager.startx.enable = true;
+          };
+          services.pipewire.enable = lib.mkForce false;
+          sound.enable = lib.mkForce false;
+
           programs.bash.loginShellInit = ''
             if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
               startx
@@ -37,9 +45,9 @@
           environment.systemPackages = [
             pkgs.htop
             pkgs.btop
-            pkgs.firefox
-            pkgs.dmenu   # dwm 标配的启动器,没有它 dwm 里几乎啥也点不开
-            pkgs.st      # suckless 的终端,dwm 默认按 Mod+Shift+Return 开的就是它
+            pkgs.dmenu
+            pkgs.st
+            # firefox 先去掉,内存紧张时几乎必炸;链路和 dwm 都跑通后再单独加回来测
           ];
         })
       ];
