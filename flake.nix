@@ -1,8 +1,7 @@
 {
   description = "Minimal target config for usb-bootstrap testing";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
   outputs = { self, nixpkgs, ... }:
   {
     nixosConfigurations.usb-test = nixpkgs.lib.nixosSystem {
@@ -39,7 +38,6 @@
           '';
 
           environment.systemPackages = [
-            pkgs.htop
             pkgs.btop
             pkgs.dmenu
             pkgs.st
