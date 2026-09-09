@@ -21,7 +21,7 @@
 
           system.stateVersion = "24.05";
 
-          environment.systemPackages = [ pkgs.htop ];
+          environment.systemPackages = [ pkgs.htop pkgs.btop ];
         })
       ];
     };
