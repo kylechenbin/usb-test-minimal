@@ -3,6 +3,8 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
   outputs = { self, nixpkgs, ... }:
   {
     nixosConfigurations.usb-test = nixpkgs.lib.nixosSystem {
@@ -31,6 +33,9 @@
               startx
             fi
           '';
+
+          # 加这一行 ↓↓↓
+          nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
           environment.systemPackages = [
             pkgs.htop
