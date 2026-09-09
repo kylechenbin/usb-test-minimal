@@ -35,6 +35,7 @@
           environment.systemPackages = [
             pkgs.htop
             pkgs.btop
+            pkgs.firefox
             pkgs.dmenu   # dwm 标配的启动器,没有它 dwm 里几乎啥也点不开
             pkgs.st      # suckless 的终端,dwm 默认按 Mod+Shift+Return 开的就是它
           ];
