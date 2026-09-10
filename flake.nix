@@ -10,6 +10,7 @@
         ({ pkgs, lib, ... }: {
           networking.hostName = "usb-test-target";
           networking.useDHCP = lib.mkForce true;
+          networking.networkmanager.enable = true;
 
           boot.loader.grub.enable = false;
           fileSystems."/" = { device = "none"; fsType = "tmpfs"; };
