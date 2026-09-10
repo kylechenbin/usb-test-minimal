@@ -39,10 +39,11 @@
             fi
           '';
 
-          environment.systemPackages = [
-            pkgs.btop
-            pkgs.dmenu
-            pkgs.st
+          environment.systemPackages = with pkgs; [
+            firefox
+            btop
+            dmenu
+            st
           ];
         })
       ];
