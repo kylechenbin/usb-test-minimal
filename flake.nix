@@ -32,7 +32,7 @@
             displayManager.startx.enable = true;
           };
           services.pipewire.enable = lib.mkForce false;
-
+          services.udisks2.enable = true;
           programs.bash.loginShellInit = ''
             if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
               exec startx ${pkgs.dwm}/bin/dwm
@@ -40,6 +40,7 @@
           '';
 
           environment.systemPackages = with pkgs; [
+
             vim
             firefox
             btop
