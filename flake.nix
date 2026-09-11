@@ -40,6 +40,8 @@
           '';
 
           environment.systemPackages = with pkgs; [
+            vifm
+            udiskie
             umu-launcher
             vim
             firefox
