@@ -40,7 +40,7 @@
           '';
 
           environment.systemPackages = with pkgs; [
-
+            umu-launcher
             vim
             firefox
             btop
