@@ -40,6 +40,7 @@
           '';
 
           environment.systemPackages = with pkgs; [
+            vim
             firefox
             btop
             dmenu
