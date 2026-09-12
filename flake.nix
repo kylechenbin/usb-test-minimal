@@ -35,9 +35,24 @@
           services.udisks2.enable = true;
           programs.bash.loginShellInit = ''
             if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
-              exec startx ${pkgs.dwm}/bin/dwm
+              exec startx ${pkgs.writeShellScript "start-session" ''
+                ${pkgs.udiskie}/bin/udiskie &
+                exec ${pkgs.dwm}/bin/dwm
+              ''}
             fi
           '';
+
+          # Define a user account. Don't forget to set a password with ‘passwd’.
+          users.users.test = {
+            isNormalUser = true;
+            extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
+            packages = with pkgs; [
+              tree
+            ];
+          };
+
+          services.udisks2.enable = true;
+          security.polkit.enable = true;
 
           environment.systemPackages = with pkgs; [
             vifm
