@@ -16,6 +16,45 @@
           fileSystems."/" = { device = "none"; fsType = "tmpfs"; };
           boot.kernelParams = [ "console=ttyS0,115200n8" "console=tty1" ];
 
+          # Enable Zram
+          boot.kernel.sysctl = {
+            # Tells the kernel to prefer using Zram over dropping file caches
+            "vm.swappiness" = 180; 
+            "vm.watermark_boost_factor" = 0;
+            "vm.watermark_scale_factor" = 125;
+            "vm.page-cluster" = 0;
+          };
+
+          zramSwap = {
+            enable = true;
+            # Compresses RAM up to 100% of your total physical memory size
+            memoryPercent = 100; 
+            priority = 999;
+            # 'zstd' offers the best balance of compression ratio and speed
+            algorithm = "zstd"; 
+          };
+          
+          #Auto-Optimize the Nix Store & Garbage Collection
+          nix = {
+            settings = {
+              # Automatically hardlinks identical files in the store to save disk/cache overhead
+              auto-optimise-store = true;
+              # Limits the number of concurrent build jobs to free up memory
+              max-jobs = "auto";
+            };
+            gc = {
+              automatic = true;
+              dates = "daily";
+              options = "--delete-older-than 1d";
+            };
+          }
+
+          # Limit Systemd Journal Logs in Memory
+          services.journald.extraConfig = ''
+            SystemMaxUse=50M
+            RuntimeMaxUse=50M
+          '';
+
           services.getty.autologinUser = "test";
           users.users.root.initialPassword = "root";
           users.users.test.initialPassword = "test";
@@ -68,11 +107,12 @@
           security.polkit.enable = true;
 
           environment.systemPackages = with pkgs; [
+            pamixer
             vifm
             udiskie
             umu-launcher
             vim
-            firefox
+            qutebrowser
             btop
             dmenu
             st
