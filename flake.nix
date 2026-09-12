@@ -28,11 +28,26 @@
 
           services.xserver = {
             enable = true;
-            videoDrivers = [ "modesetting" ];
+            videoDrivers = [ "modesetting" "amdgpu" "nouveau" ];
             windowManager.dwm.enable = true;
             displayManager.startx.enable = true;
           };
-          services.pipewire.enable = lib.mkForce false;
+
+          hardware.graphics = {
+            enable = true;
+            enable32Bit = true;   # Steam/大部分游戏依赖 32 位库
+          };
+
+          # gamescope/gamemode 这类优化工具,可选
+          programs.gamemode.enable = true;
+
+          services.pipewire = {
+            enable = true;
+            alsa.enable = true;
+            alsa.support32Bit = true;   # 32 位游戏需要，跟 hardware.graphics.enable32Bit 配套
+            pulse.enable = true;        # 大部分游戏走 PulseAudio 兼容层跟音频交互
+          };
+
           services.udisks2.enable = true;
           programs.bash.loginShellInit = ''
             if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
