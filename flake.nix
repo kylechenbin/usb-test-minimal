@@ -24,8 +24,6 @@
 
           nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-          hardware.graphics.enable = lib.mkForce false;
-
           services.xserver = {
             enable = true;
             videoDrivers = [ "modesetting" "amdgpu" "nouveau" ];
