@@ -128,5 +128,23 @@
           })
         ];
       };
+
+      # 较老的 Nvidia 独显（大致 Kepler/Maxwell 附近，GTX 601-900 系一带）
+      nixosConfigurations.usb-test-nvidia-legacy = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          commonModule
+          ({ config, ... }: {
+            networking.hostName = "usb-test-nvidia-legacy";
+            services.xserver.enable = true;
+            services.xserver.videoDrivers = [ "nvidia" ];
+            hardware.nvidia = {
+              modesetting.enable = true;
+              open = false;   # legacy 驱动没有开源内核模块选项，必须用闭源
+              package = config.boot.kernelPackages.nvidiaPackages.legacy_470;
+            };
+          })
+        ];
+      };
     };
 }
