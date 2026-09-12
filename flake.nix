@@ -36,6 +36,9 @@
           programs.bash.loginShellInit = ''
             if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
               exec startx ${pkgs.writeShellScript "start-session" ''
+                # Start udiskie with a tray icon or in the background
+                ${pkgs.udiskie}/bin/udiskie --tray &
+
                 ${pkgs.udiskie}/bin/udiskie &
                 exec ${pkgs.dwm}/bin/dwm
               ''}
