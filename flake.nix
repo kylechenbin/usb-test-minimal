@@ -118,6 +118,7 @@
           commonModule
           ({ config, ... }: {
             networking.hostName = "usb-test-nvidia";
+            nixpkgs.config.allowUnfree = true;
             services.xserver.enable = true;
             services.xserver.videoDrivers = [ "nvidia" ];
             hardware.nvidia = {
@@ -136,6 +137,7 @@
           commonModule
           ({ config, ... }: {
             networking.hostName = "usb-test-nvidia-legacy";
+            nixpkgs.config.allowUnfree = true;
             services.xserver.enable = true;
             services.xserver.videoDrivers = [ "nvidia" ];
             hardware.nvidia = {
