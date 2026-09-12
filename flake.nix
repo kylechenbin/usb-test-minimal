@@ -47,7 +47,7 @@
               dates = "daily";
               options = "--delete-older-than 1d";
             };
-          }
+          };
 
           # Limit Systemd Journal Logs in Memory
           services.journald.extraConfig = ''
