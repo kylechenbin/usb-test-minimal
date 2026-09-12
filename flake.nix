@@ -16,8 +16,9 @@
           fileSystems."/" = { device = "none"; fsType = "tmpfs"; };
           boot.kernelParams = [ "console=ttyS0,115200n8" "console=tty1" ];
 
-          services.getty.autologinUser = "root";
+          services.getty.autologinUser = "test";
           users.users.root.initialPassword = "root";
+          users.users.root.initialPassword = "test";
 
           system.stateVersion = "25.05";
 
@@ -36,9 +37,6 @@
           programs.bash.loginShellInit = ''
             if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
               exec startx ${pkgs.writeShellScript "start-session" ''
-                # Start udiskie with a tray icon or in the background
-                ${pkgs.udiskie}/bin/udiskie --tray &
-
                 ${pkgs.udiskie}/bin/udiskie &
                 exec ${pkgs.dwm}/bin/dwm
               ''}
