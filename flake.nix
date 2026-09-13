@@ -1,10 +1,11 @@
 {
-  description = "Gaming target config for usb-bootstrap (generic + nvidia profiles)";
+  description = "Gaming target config for usb-bootstrap (generic + nvidia + dwl profiles)";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
 
   outputs = { self, nixpkgs, ... }:
     let
+      # ---- 真正跟窗口系统无关的公共部分 ----
       commonModule = { pkgs, lib, ... }: {
         networking.useDHCP = lib.mkForce false;
         networking.networkmanager.enable = true;
@@ -28,7 +29,7 @@
         };
 
         nix.settings = {
-          auto-optimise-store = false;   # 一次性 tmpfs 系统用不上，省下这份开销
+          auto-optimise-store = false;
           max-jobs = "auto";
           experimental-features = [ "nix-command" "flakes" ];
         };
@@ -54,9 +55,6 @@
 
         system.stateVersion = "25.05";
 
-        services.xserver.windowManager.dwm.enable = true;
-        services.xserver.displayManager.startx.enable = true;
-
         hardware.graphics = {
           enable = true;
           enable32Bit = true;
@@ -70,19 +68,10 @@
           alsa.support32Bit = true;
           pulse.enable = true;
         };
-        security.rtkit.enable = true;   # 新加，pipewire 需要
+        security.rtkit.enable = true;
 
         services.udisks2.enable = true;
         security.polkit.enable = true;
-
-        programs.bash.loginShellInit = ''
-          if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
-            exec startx ${pkgs.writeShellScript "start-session" ''
-              ${pkgs.udiskie}/bin/udiskie &
-              exec ${pkgs.dwm}/bin/dwm
-            ''}
-          fi
-        '';
 
         environment.systemPackages = with pkgs; [
           pamixer
@@ -96,13 +85,52 @@
           st
         ];
       };
+
+      # ---- X11 + dwm 专属部分 ----
+      x11Module = { pkgs, ... }: {
+        services.xserver.windowManager.dwm.enable = true;
+        services.xserver.displayManager.startx.enable = true;
+
+        programs.bash.loginShellInit = ''
+          if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
+            exec startx ${pkgs.writeShellScript "start-session" ''
+              ${pkgs.udiskie}/bin/udiskie &
+              exec ${pkgs.dwm}/bin/dwm
+            ''}
+          fi
+        '';
+      };
+
+      # ---- Wayland + dwl 专属部分 ----
+      waylandModule = { pkgs, ... }: {
+        # dwl 场景不需要 X server
+        services.xserver.enable = false;
+
+        # 让非 root 用户能拿到 seat/DRM 权限
+        services.seatd.enable = true;
+        users.users.test.extraGroups = [ "video" "render" "seat" ];
+
+        environment.systemPackages = [ pkgs.dwl pkgs.foot ];  # foot: 一个轻量 wayland 终端，替代 st
+
+        programs.bash.loginShellInit = ''
+          if [ -z "$WAYLAND_DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
+            exec dbus-run-session ${pkgs.writeShellScript "start-dwl-session" ''
+              export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+              mkdir -p "$XDG_RUNTIME_DIR"
+              ${pkgs.udiskie}/bin/udiskie --no-automount &
+              exec ${pkgs.dwl}/bin/dwl
+            ''}
+          fi
+        '';
+      };
     in
     {
-      # 通用兜底：AMD / Intel / 未知或旧款 Nvidia
+      # AMD / Intel / 未知或旧款 Nvidia，X11 + dwm
       nixosConfigurations.usb-test = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
           commonModule
+          x11Module
           {
             networking.hostName = "usb-test-target";
             services.xserver.enable = true;
@@ -111,11 +139,12 @@
         ];
       };
 
-      # 已知是较新 Nvidia 独显(RTX 20系+)时用这个
+      # 较新 Nvidia 独显(RTX 20系+)，X11 + dwm
       nixosConfigurations.usb-test-nvidia = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
           commonModule
+          x11Module
           ({ config, ... }: {
             networking.hostName = "usb-test-nvidia";
             nixpkgs.config.allowUnfree = true;
@@ -130,11 +159,12 @@
         ];
       };
 
-      # 较老的 Nvidia 独显（大致 Kepler/Maxwell 附近，GTX 601-900 系一带）
+      # 较老 Nvidia 独显(GTX 600-900系一带)，X11 + dwm
       nixosConfigurations.usb-test-nvidia-legacy = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
           commonModule
+          x11Module
           ({ config, ... }: {
             networking.hostName = "usb-test-nvidia-legacy";
             nixpkgs.config.allowUnfree = true;
@@ -142,10 +172,22 @@
             services.xserver.videoDrivers = [ "nvidia" ];
             hardware.nvidia = {
               modesetting.enable = true;
-              open = false;   # legacy 驱动没有开源内核模块选项，必须用闭源
+              open = false;
               package = config.boot.kernelPackages.nvidiaPackages.legacy_470;
             };
           })
+        ];
+      };
+
+      # AMD / Intel / 较新 Nvidia，Wayland + dwl（实验性，旧款 Nvidia 不建议用这个）
+      nixosConfigurations.usb-test-dwl = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          commonModule
+          waylandModule
+          {
+            networking.hostName = "usb-test-dwl";
+          }
         ];
       };
     };
